@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WhatsApp Clone</title>
+    <!-- Google Font Stylesheets -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1e2025;
+            /* Dark background color */
+            color: #ccc;
+            /* Text color */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            background-color: #29343d;
+            /* Container background color */
+        }
+
+        nav {
+            background-color: #2d2d2d;
+            /* Navbar background color */
+            padding: 10px 0;
+            margin-bottom: 20px;
+            /* Add some space between navbar and content */
+        }
+
+        #logo {
+            font-family: 'Protest Revolution', sans-serif;
+            font-size: 50px;
+            text-decoration: none;
+            color: rgb(236, 212, 212);
+        }
+
+        nav img {
+            height: 40px;
+            /* Set logo height */
+            padding: 5px;
+        }
+
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            text-align: right;
+        }
+
+        nav ul li {
+            display: inline-block;
+            margin-left: 20px;
+        }
+
+        nav ul li a {
+            color: #ccc;
+            /* Navbar link color */
+            text-decoration: none;
+        }
+
+        .container #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container #messages li {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .container #messages .sender {
+            background-color: #0f1b27;
+            /* Sender message background color */
+            color: #fff;
+            /* Sender message text color */
+            align-self: flex-end;
+        }
+
+        .container #messages .receiver {
+            background-color: #0d0e177a;
+            /* Receiver message background color */
+            color: #fff;
+            /* Receiver message text color */
+            align-self: flex-start;
+        }
+
+        .container #messages li:last-child {
+            margin-bottom: 0;
+        }
+
+        .container #form {
+            margin-top: 20px;
+            display: flex;
+        }
+
+        .container #name,
+        .container #input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #666;
+            border-radius: 5px 0 0 5px;
+            background-color: #444;
+            /* Input background color */
+            color: #ccc;
+            /* Input text color */
+        }
+
+        .container #name {
+            margin-right: 5px;
+        }
+
+        .container #name:focus,
+        .container #input:focus {
+            outline: none;
+        }
+
+        .container button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #5a7480;
+            /* Button background color */
+            color: #fff;
+            /* Button text color */
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+
+        .container button:hover {
+            background-color: #3c5665;
+            /* Button hover background color */
+        }
+
+        footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bolder;
+            background-color: black;
+            color: white;
+            /* font size: 2vw; */
+            position: fixed;
+            bottom: 0;
+            height: 8vh;
+            width: 100vw;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="index.html" id="logo">ChatIFY</a> <!-- Logo -->
+    </nav>
+    <div class="container">
+        <ul id="messages">
+        </ul>
+        <form id="form" action="">
+            <input id="name" placeholder="Enter your name" autocomplete="off">
+            <input id="input" autocomplete="off">
+            <button>Send</button>
+        </form>
+    </div>
+    <script src="http://192.168.1.7:3000/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        var form = document.getElementById('form');
+        var input = document.getElementById('input');
+        var nameInput = document.getElementById('name');
+        var userName = null;
+
+        // Function to send a message
+        function sendMessage() {
+            if (input.value && userName) {
+                socket.emit('chat message', { name: userName, message: input.value });
+                input.value = '';
+            }
+        }
+
+        // Function to display a system message
+        function displaySystemMessage(message) {
+            var item = document.createElement('li');
+            item.textContent = message;
+            document.getElementById('messages').appendChild(item);
+        }
+
+        // Event listener for form submission
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            sendMessage();
+        });
+
+        // Event listener for receiving messages
+        socket.on('chat message', function (data) {
+            var item = document.createElement('li');
+            item.textContent = data.name + ": " + data.message;
+            item.className = (data.name === userName) ? 'sender' : 'receiver'; // Check if message sender is the current user
+            document.getElementById('messages').appendChild(item);
+
+            // Play notification sound only if the message is not from this user
+            if (data.name !== userName) {
+                new Audio('ting.mp3').play();
+            }
+        });
+
+        // Event listener for receiving system messages
+        socket.on('system message', function (message) {
+            displaySystemMessage(message);
+        });
+
+        
+        // Event listener for receiving the user's name
+        socket.on('user name', function (name) {
+            if (!userName) {
+                userName = name;
+                nameInput.setAttribute('disabled', 'true');
+                input.focus();
+            }
+        });
+
+
+        // Event listener for input focus
+        input.addEventListener('focus', function () {
+            if (!userName) {
+                nameInput.focus();
+            }
+        });
+
+        // Event listener for name input field
+        nameInput.addEventListener('change', function () {
+            userName = nameInput.value;
+            nameInput.setAttribute('disabled', 'true');
+            nameInput.style.display = 'none';
+            input.focus();
+        });
+
+    </script>
+    <footer>&copy; CopyRight Reserved 2024-Till Date</footer>
+</body>
+
+</html>
