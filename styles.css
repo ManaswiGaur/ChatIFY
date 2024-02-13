@@ -66,3 +66,18 @@ p {
     background-color: #465f7b;
     transform: scale(1.05); /* Scale up the button on hover */
 }
+
+
+@media screen and (max-width:400px) {
+    h1 {
+        font-size: 24px;
+        margin-bottom : 20px;
+    }
+    p {
+        font-size: 18px;
+        margin-bottom: 40px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
